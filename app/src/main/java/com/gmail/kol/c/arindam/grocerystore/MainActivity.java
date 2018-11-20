@@ -1,120 +1,109 @@
 package com.gmail.kol.c.arindam.grocerystore;
 
-import android.content.ContentValues;
+import android.app.LoaderManager;
+import android.content.ContentUris;
+import android.content.CursorLoader;
+import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.AdapterView;
+import android.widget.ListView;
 
-import com.gmail.kol.c.arindam.grocerystore.data.InventoryDBHelper;
 import com.gmail.kol.c.arindam.grocerystore.data.ProductInfo.ProductData;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private InventoryDBHelper mDBHelper;
+    ProductCursorAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mDBHelper = new InventoryDBHelper(this);
-        displayData();
-
-        //on button click add data row in table
-        Button insertProduct = findViewById(R.id.insert_button);
-        insertProduct.setOnClickListener(new View.OnClickListener() {
+        //set floating action button & onclick open product editor
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                insertData();
-                displayData();
+                Intent intent = new Intent(MainActivity.this, EditorActivity.class);
+                startActivity(intent);
             }
         });
-    }
 
-    //display data in a text view
-    private void displayData () {
-        SQLiteDatabase db = mDBHelper.getReadableDatabase();
+        //set list view
+        ListView productListView = findViewById(R.id.product_list);
 
-        //projection for sql query
-        String [] projection = {ProductData.COLUMN_PRODUCT_ID,
-                                ProductData.COLUMN_PRODUCT_NAME,
-                                ProductData.COLUMN_PRODUCT_PRICE,
-                                ProductData.COLUMN_PRODUCT_STOCK,
-                                ProductData.COLUMN_SUPPLIER_NAME,
-                                ProductData.COLUMN_SUPPLIER_CONTACT,
-                                ProductData.COLUMN_PRODUCT_COST};
+        //create empty view
+        View emptyView = findViewById(R.id.empty_text_view);
+        productListView.setEmptyView(emptyView);
 
-        //sql query return cursor
-        Cursor cursor = db.query(ProductData.TABLE_NAME,projection,null,null,null,null,null);
+        //set up cursor adapter with null value & attach to list view
+        adapter = new ProductCursorAdapter(this,null);
+        productListView.setAdapter(adapter);
 
-        TextView resultText = findViewById(R.id.result);
+        //on product list item click, open that item in the editor activity
+        productListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                Intent intent = new Intent(MainActivity.this, EditorActivity.class);
 
-        //get data from cursor and show in text view
-        try {
-            resultText.setText("Product Table has " + cursor.getCount() + " products.\n\n");
+                //put id of clicked product in uri & pass it to editor activity
+                Uri currentUri = ContentUris.withAppendedId(ProductData.CONTENT_URI, id);
+                intent.setData(currentUri);
 
-            int nameColumnindex = cursor.getColumnIndex(ProductData.COLUMN_PRODUCT_NAME);
-            int priceColumnIndex = cursor.getColumnIndex(ProductData.COLUMN_PRODUCT_PRICE);
-            int qtyColumnIndex = cursor.getColumnIndex(ProductData.COLUMN_PRODUCT_STOCK);
-            int supplierNameColumnindex = cursor.getColumnIndex(ProductData.COLUMN_SUPPLIER_NAME);
-            int supplierPhoneColumnindex = cursor.getColumnIndex(ProductData.COLUMN_SUPPLIER_CONTACT);
-
-            while (cursor.moveToNext()) {
-                String currentProductName = cursor.getString(nameColumnindex);
-                int currentProductPrice = cursor.getInt(priceColumnIndex);
-                int currentProductQty = cursor.getInt(qtyColumnIndex);
-                String currentSupplierName = cursor.getString(supplierNameColumnindex);
-                String currentSupplierPhone = cursor.getString(supplierPhoneColumnindex);
-
-                resultText.append(currentProductName + " - " + currentProductPrice + " - " + currentProductQty + " - " +
-                currentSupplierName + " - " + currentSupplierPhone + "\n");
+                startActivity(intent);
             }
-        } finally {
-            cursor.close();
-        }
+        });
+
+        //start loader
+        getLoaderManager().initLoader(0,null,this);
     }
 
-    //get data from edit text & insert same to database
-    //as there is no data validation do not enter blank data
-    private void insertData() {
-        EditText nameEditText = findViewById(R.id.edit_text_name);
-        EditText priceEditText = findViewById(R.id.edit_text_price);
-        EditText qtyEditText = findViewById(R.id.edit_text_qty);
-        EditText supplierNameEditText = findViewById(R.id.edit_text_sup_name);
-        EditText supplierPhoneEditText = findViewById(R.id.edit_text_sup_ph);
-        EditText costEditText = findViewById(R.id.edit_text_cost);
+    //create menu
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main,menu);
+        return true;
+    }
 
-        String productName = nameEditText.getText().toString().trim();
-        int productPrice = Integer.parseInt(priceEditText.getText().toString().trim());
-        int productStock = Integer.parseInt(qtyEditText.getText().toString().trim());
-        String supplierName = supplierNameEditText.getText().toString().trim();
-        String supplierPhone = supplierPhoneEditText.getText().toString().trim();
-        int productCost = Integer.parseInt(costEditText.getText().toString().trim());
+    //when menu item clicked
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            //delete table
+            case R.id.delete_table :
+                getContentResolver().delete(ProductData.CONTENT_URI,null,null);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
-        //create new content value object & enter data in it
-        ContentValues mContentValues = new ContentValues();
-        mContentValues.put(ProductData.COLUMN_PRODUCT_NAME, productName);
-        mContentValues.put(ProductData.COLUMN_PRODUCT_PRICE, productPrice);
-        mContentValues.put(ProductData.COLUMN_PRODUCT_STOCK, productStock);
-        mContentValues.put(ProductData.COLUMN_SUPPLIER_NAME, supplierName);
-        mContentValues.put(ProductData.COLUMN_SUPPLIER_CONTACT, supplierPhone);
-        mContentValues.put(ProductData.COLUMN_PRODUCT_COST, productCost);
+    //load product data from database table to cursor in background thread
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        String [] projection = {ProductData.COLUMN_PRODUCT_ID,
+                ProductData.COLUMN_PRODUCT_NAME,
+                ProductData.COLUMN_PRODUCT_PRICE,
+                ProductData.COLUMN_PRODUCT_STOCK};
+        return new CursorLoader(this, ProductData.CONTENT_URI,projection,null,null,null);
+    }
 
-        SQLiteDatabase db = mDBHelper.getWritableDatabase();
+    //when loading complete add cursor to the list view
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        adapter.swapCursor(cursor);
+    }
 
-        //create new row of data by inserting content value to table
-        db.insert(ProductData.TABLE_NAME, null, mContentValues);
-
-        nameEditText.getText().clear();
-        priceEditText.getText().clear();
-        qtyEditText.getText().clear();
-        supplierNameEditText.getText().clear();
-        supplierPhoneEditText.getText().clear();
+    //if data reset change list view adapter to null
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        adapter.swapCursor(null);
     }
 }

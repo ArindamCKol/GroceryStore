@@ -13,6 +13,7 @@ public class InventoryDBHelper extends SQLiteOpenHelper {
     //database version
     private static final int DATABASE_VERSION = 1;
 
+    //constructor
     public InventoryDBHelper(Context context) {
         super(context,DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -27,8 +28,7 @@ public class InventoryDBHelper extends SQLiteOpenHelper {
                 + ProductData.COLUMN_PRODUCT_PRICE + " INTEGER NOT NULL, "
                 + ProductData.COLUMN_PRODUCT_STOCK + " INTEGER NOT NULL DEFAULT 0, "
                 + ProductData.COLUMN_SUPPLIER_NAME + " TEXT, "
-                + ProductData.COLUMN_SUPPLIER_CONTACT + " TEXT, "
-                + ProductData.COLUMN_PRODUCT_COST + " INTEGER NOT NULL" + ");";
+                + ProductData.COLUMN_SUPPLIER_CONTACT + " TEXT" + ");";
 
         //execute create table SQL statement
         sqLiteDatabase.execSQL(CREATE_PRODUCT_TABLE);
@@ -38,6 +38,4 @@ public class InventoryDBHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
 
     }
-
-
 }

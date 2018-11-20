@@ -9,4 +9,11 @@
     <string name="supplier_phone_text">Supplier Phone :</string>
     <string name="cost_text">Cost :</string>
     <string name="insert_product">Insert Product</string>
+    <string name="action_delete_table">Delete Table</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="title_add_product">Add New Product</string>
+    <string name="title_edit_product">Edit Product Details</string>
+    <string name="empty_text">No Product in the Table. \n\nYou can enter product by pressing Add button below.
+        \n\nKindly note, Product name, price, Supplier name and phone number are necessary field. Default quantity is 0.</string>
 </resources>
