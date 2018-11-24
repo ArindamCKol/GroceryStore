@@ -74,7 +74,7 @@ public class InventoryProvider extends ContentProvider {
         //notify cursor loader that value of cursor changed
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
 
-        // Return the cursor
+        //return the cursor
         return cursor;
     }
 
