@@ -32,4 +32,6 @@
     <string name="no_change">No change in Product details</string>
     <string name="dialog_title_discard">To save changes, press Edit. Otherwise press Discard</string>
     <string name="dialog_button_discard">Discard</string>
+    <string name="no_stock">No stock to sell</string>
+    <string name="button_sale">Sale</string>
 </resources>

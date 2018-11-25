@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -16,22 +17,29 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.gmail.kol.c.arindam.grocerystore.data.ProductInfo.ProductData;
 
-public class EditorActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class EditorActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener {
 
     //uri for existing product
     private Uri mCurrentUri;
 
-    //declare edit text
+    //declare edit text variables
     private EditText nameEditText;
     private EditText priceEditText;
     private EditText qtyEditText;
     private EditText supplierNameEditText;
     private EditText supplierPhoneEditText;
+
+    //declare button variables
+    private Button increaseQty;
+    private Button deacreaseQty;
+    private FloatingActionButton callSupplier;
 
     //to check data changed status
     private boolean hasDataChanged = false;
@@ -68,7 +76,17 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         priceEditText.addTextChangedListener(textWatcher);
         qtyEditText.addTextChangedListener(textWatcher);
         supplierNameEditText.addTextChangedListener(textWatcher);
-        supplierNameEditText.addTextChangedListener(textWatcher);
+        supplierPhoneEditText.addTextChangedListener(textWatcher);
+
+        //link button variables with xml widgets
+        increaseQty = findViewById(R.id.increase_qty);
+        deacreaseQty = findViewById(R.id.decrease_qty);
+        callSupplier = findViewById(R.id.call_supplier);
+
+        //add onclick listener to buttons
+        increaseQty.setOnClickListener(this);
+        deacreaseQty.setOnClickListener(this);
+        callSupplier.setOnClickListener(this);
 
         //get uri for existing product
         Intent intent = getIntent();
@@ -77,9 +95,11 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         //select appropriate title for activity
         if (mCurrentUri == null) {
             setTitle(R.string.title_add_product);
+            callSupplier.setVisibility(View.GONE); //new product does not have phone no.
             invalidateOptionsMenu(); //disable delete menu item for new product
         } else {
             setTitle(R.string.title_edit_product);
+            callSupplier.setVisibility(View.VISIBLE);
             getLoaderManager().initLoader(0,null,this); //load existing product in cursor loader
         }
     }
@@ -138,7 +158,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         String supplierPhone = supplierPhoneEditText.getText().toString().trim();
         //variable for integer data
         int productPrice;
-        int productStock;
+        int productStock = Integer.parseInt(productStockText);
 
         //check string string values from edit text, if they are empty, then show appropriate message and return without insert/update
         if (TextUtils.isEmpty(productName)) {
@@ -151,13 +171,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             return;
         } else {
             productPrice = Integer.parseInt(productPriceText); //string is not empty cast then to integer variable
-        }
-
-        if (TextUtils.isEmpty(productStockText)) {
-            Toast.makeText(this, getString(R.string.error_message,getString(R.string.quantity_text)), Toast.LENGTH_LONG).show();
-            return;
-        } else {
-            productStock = Integer.parseInt(productStockText); //string is not empty cast then to integer variable
         }
 
         if (TextUtils.isEmpty(supplierName)) {
@@ -345,5 +358,41 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         //attach builder to dialog box and show it
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    @Override
+    public void onClick(View view) {
+        int productQty = Integer.parseInt(qtyEditText.getText().toString().trim());
+        switch (view.getId()) {
+            case R.id.increase_qty :
+                productQty++;
+                qtyEditText.setText(String.valueOf(productQty));
+                return;
+            case R.id.decrease_qty :
+                if (productQty>0) {
+                    productQty--;
+                    qtyEditText.setText(String.valueOf(productQty));
+                }
+                return;
+            case R.id.call_supplier :
+                dialNumber();
+                return;
+        }
+    }
+
+    //call phone number
+    public void dialNumber () {
+        String phoneNumber = supplierPhoneEditText.getText().toString().trim();
+
+        if (TextUtils.isEmpty(phoneNumber)) {
+            Toast.makeText(this, "Phone number is Empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+        intent.setData(Uri.parse("tel:" + phoneNumber));
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 }
