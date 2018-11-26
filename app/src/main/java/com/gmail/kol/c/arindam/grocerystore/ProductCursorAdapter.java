@@ -47,8 +47,8 @@ public class ProductCursorAdapter extends CursorAdapter {
         final int[] currentProductQty = {cursor.getInt(qtyColumnIndex)};
 
         productName.setText(currentProductName);
-        productPrice.setText(String.valueOf(currentProductPrice));
-        productQty.setText(String.valueOf(currentProductQty[0]));
+        productPrice.setText(context.getString(R.string.list_view_price,currentProductPrice));
+        productQty.setText(context.getString(R.string.list_view_qty,currentProductQty[0]));
 
         //if sell button clicked reduce quantity in list view and product table
         saleProduct.setOnClickListener(new View.OnClickListener() {

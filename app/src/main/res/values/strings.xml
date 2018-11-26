@@ -34,4 +34,6 @@
     <string name="dialog_button_discard">Discard</string>
     <string name="no_stock">No stock to sell</string>
     <string name="button_sale">Sale</string>
+    <string name="list_view_price">Price : %d</string>
+    <string name="list_view_qty">Quantity : %d</string>
 </resources>
